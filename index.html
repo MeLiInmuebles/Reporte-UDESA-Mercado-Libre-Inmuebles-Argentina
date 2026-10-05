@@ -59,14 +59,25 @@
     const link = document.getElementById('download');
     const regionName = document.getElementById('region-name');
     const fileName = document.getElementById('file-name');
+    let activePdfUrl;
+
+    function createPdfUrl(dataUrl) {
+      const binary = atob(dataUrl.slice(dataUrl.indexOf(',') + 1));
+      const bytes = new Uint8Array(binary.length);
+      for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+      return URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+    }
+
     document.querySelectorAll('[data-region]').forEach((button) => {
       button.addEventListener('click', () => {
         const item = reports[button.dataset.region];
         item.name = 'Informe inmobiliario ' + item.label + ' - Septiembre 2026.pdf';
         document.querySelectorAll('[data-region]').forEach((b) => b.classList.toggle('active', b === button));
-        frame.src = item.file + '#page=1&zoom=page-width';
+        if (activePdfUrl) URL.revokeObjectURL(activePdfUrl);
+        activePdfUrl = createPdfUrl(item.file);
+        frame.src = activePdfUrl + '#page=1&zoom=page-width';
         frame.title = 'Informe inmobiliario ' + item.label + ', septiembre de 2026';
-        link.href = item.file;
+        link.href = activePdfUrl;
         link.setAttribute('download', item.name);
         regionName.textContent = item.label;
         fileName.textContent = item.name;
